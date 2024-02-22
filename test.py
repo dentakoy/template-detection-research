@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from mss import mss
 import time
+import os
 
 # time.sleep(2)
 # Инициализация объекта mss для захвата экрана
@@ -15,6 +16,11 @@ monitor = sct.monitors[2]
 sct_img = sct.grab(monitor)
 screenshot = np.array(sct_img)
 screenshot_original = cv2.cvtColor(screenshot, cv2.COLOR_BGRA2BGR)
+
+img_outpur_dir = 'img'
+
+if not os.path.exists(img_outpur_dir):
+    os.makedirs(img_outpur_dir)
 
 
 img1 = cv2.cvtColor(screenshot_original, cv2.COLOR_BGR2GRAY)
@@ -39,7 +45,7 @@ for image_path in image_paths:
     # Since SURF is a floating-point descriptor NORM_L2 is used
     index_params = dict(algorithm=1, trees=5)
     search_params = dict(checks=50)
-    matcher = cv2.FlannBasedMatcher(index_params, search_params)
+    matcher = cv2.BFMatcher()
     matches = matcher.knnMatch(des1, des2, 2)
     
     # -- Filter matches using the Lowe's ratio test
@@ -54,7 +60,7 @@ for image_path in image_paths:
     #     if matches[query_idx].distance < ratio_thresh * matches[train_idx].distance:
     #         good_matches.append(m)
 
-    threshold_ratio     = 0.8
+    threshold_ratio     = 0.4
     filtered_matches    = []
 
     for match in matches:
@@ -97,7 +103,7 @@ for image_path in image_paths:
 
 
         cv2.imwrite(
-            f'img/{image_path[:-4]}.png', img_cross)
+            f'{img_outpur_dir}/{image_path[:-4]}.png', img_cross)
     else:
         print(
             f"{image_path[:-4]}, не найдено совпадений")
