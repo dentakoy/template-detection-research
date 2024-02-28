@@ -1,11 +1,11 @@
 import cv2
 
 
-class ImageReadError(Exception):
+class LoadGrayImageException(Exception):
     pass
 
 
-class MissingTemplatesError(Exception):
+class MissingTemplatesException(Exception):
     pass
 
 
@@ -22,17 +22,19 @@ class TemplateDetector:
 
         for key in templates:
             self.templates[key] = self.extractFeatures(
-                self.readImage(templates[key]))
+                self.loadGrayImage(templates[key]))
 
         if len(self.templates) is 0:
-            raise MissingTemplatesError('Missing templates')
+            raise MissingTemplatesException('Missing templates')
 
 
-    def readImage(self, path):
+    def loadGrayImage(self, path):
         grayImage = cv2.imread(path, cv2.COLOR_BGR2GRAY)
 
         if grayImage is None:
-            raise ImageReadError('cv2.imread() returns None')
+            raise LoadGrayImageException('cv2.imread() returns None')
+        
+        return grayImage
 
 
     def extractFeatures(self, grayImage):
@@ -44,12 +46,12 @@ class TemplateDetector:
         }
 
 
-    async def find( self,
-                    templateKey,
-                    image,
-                    isGrayImage = False,
-                    ratio       = 0.4,
-                    maxMatches  = 4
+    async def locateTemplate(   self,
+                                templateKey,
+                                image,
+                                isGrayImage = False,
+                                ratio       = 0.4,
+                                maxMatches  = 4
     ):
         keypoints, descriptors = self.detector.detectAndCompute(
             image if isGrayImage else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
