@@ -1,0 +1,1 @@
+from .TemplateDetector import TemplateDetector
