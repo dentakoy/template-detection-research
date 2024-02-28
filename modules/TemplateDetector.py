@@ -21,29 +21,20 @@ class TemplateDetector:
         self.templates  = {}
 
         for key in templates:
-            self.templates[key] = self.extractFeatures(
-                self.loadGrayImage(templates[key]))
+            grayImage = cv2.imread(templates[key], cv2.COLOR_BGR2GRAY)
+
+            if grayImage is None:
+                raise LoadGrayImageException('cv2.imread() returns None')
+
+            features = self.detector.detectAndCompute(grayImage, None)
+
+            self.templates[key] = {
+                'keypoints':    features[0],
+                'descriptors':  features[1]
+            }
 
         if len(self.templates) is 0:
             raise MissingTemplatesException('Missing templates')
-
-
-    def loadGrayImage(self, path):
-        grayImage = cv2.imread(path, cv2.COLOR_BGR2GRAY)
-
-        if grayImage is None:
-            raise LoadGrayImageException('cv2.imread() returns None')
-        
-        return grayImage
-
-
-    def extractFeatures(self, grayImage):
-        keypoints, descriptors = self.detector.detectAndCompute(grayImage, None)
-
-        return {
-            'keypoints':    keypoints,
-            'descriptors':  descriptors
-        }
 
 
     async def locateTemplate(   self,
@@ -55,14 +46,12 @@ class TemplateDetector:
     ):
         keypoints, descriptors = self.detector.detectAndCompute(
             image if isGrayImage else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
-            None
-        )
+            None)
         
         all = self.matcher.knnMatch(
             descriptors, self.templates[templateKey]['descriptors'], 2)
         
         filtered = []
-
         for match in all:
             if match[0].distance < ratio * match[1].distance:
                 filtered.append(match[0])
