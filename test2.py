@@ -16,5 +16,7 @@ async def main():
 
     print(await td.locateTemplate('icon1', screenShot.take()))
 
+    print(await td.locateTemplates(['icon1', 'icon5'], screenShot.take()))
+
 
 asyncio.run(main())

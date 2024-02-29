@@ -1,3 +1,4 @@
+import asyncio
 import cv2
 
 
@@ -83,3 +84,22 @@ class TemplateDetector:
             return averagePoint(points, pointsLength)
 
         return centroid(points, pointsLength)
+    
+    async def locateTemplates(  self,
+                                templatesKeys,
+                                image,
+                                isGrayImage = False,
+                                ratio       = 0.4,
+                                maxMatches  = 4,
+                                timeout     = 7000,
+                                returnWhen  = asyncio.FIRST_COMPLETED
+    ):
+        tasks = []
+        for key in templatesKeys:
+            tasks.append(
+                self.locateTemplate(key, image, isGrayImage, ratio, maxMatches))
+
+        done, pending = await asyncio.wait(
+            fs=tasks, timeout=timeout, return_when=returnWhen)
+        
+        return done
