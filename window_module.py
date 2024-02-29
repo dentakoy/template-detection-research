@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas
+from tkinter import Tk
 from screeninfo import get_monitors
 
 
@@ -20,7 +20,7 @@ def get_monitor_info():
     return monitors_info[0]
 
 
-def get_scale_factor() -> float:
+def get_scale_factor(is_debug: bool = False) -> float:
     root = Tk()
     root.overrideredirect(True)
     root.wait_visibility(root)
@@ -34,7 +34,8 @@ def get_scale_factor() -> float:
     monitor_height = monitor['height']
     scale_factor_width = monitor_width / screen_width
     scale_factor_height = monitor_height / screen_height
-    print(monitor_width, monitor_height, scale_factor_width, scale_factor_height)
+    if is_debug:
+        print(monitor_width, monitor_height, scale_factor_width, scale_factor_height)
 
     scale_factor = 1.0
 

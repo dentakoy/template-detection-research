@@ -1,5 +1,6 @@
 from typing import Tuple
-import pygetwindow as gw
+import win32gui
+import math
 import cv2
 import numpy as np
 from mss import mss
@@ -133,23 +134,25 @@ def find_text(img, string: str):
             continue
         centr_x, centr_y = centroid(box)
         text_coord_array.append([centr_x, centr_y])
-    
+
     return text_coord_array
 
 
-def get_window_title_coord(title: str, scale_factor: float = 1.0):
-    title_coords = []
-    # Получаем список всех открытых окон
-    windows_list = gw.getAllTitles()
+def get_window_title_coord(window_name: str, scale_factor: float = 1.0):
+    def callback(handle, data):
+        nonlocal visible_rect
+        if window_name.casefold() in win32gui.GetWindowText(handle).casefold():
+            client_rect = win32gui.GetClientRect(handle)
+            client_top_left = client_rect[:2]
+            client_bottom_right = client_rect[2:]
+            visible_top_left = win32gui.ClientToScreen(handle, client_top_left)
+            visible_bottom_right = win32gui.ClientToScreen(handle, client_bottom_right)
+            visible_rect = (*visible_top_left, *visible_bottom_right)  # Convert to a single rect tuple
 
-    for window_title in windows_list:
-        window = gw.getWindowsWithTitle(window_title)[0]
-        if title.casefold() in window.title.casefold():
-            x1 = int(window.left * scale_factor)
-            y1 = int(window.top * scale_factor)
-            x2 = int(window.right * scale_factor)
-            y2 = int(window.bottom * scale_factor)
-            print(f"Название окна: {window.title}, Координаты: x = {x1}, {y1} : y = {x2}, {y2}")
-            title_coords.append({"title": window_title, "rect": [x1, y1, x2, y2]})
+    visible_rect = None
+    win32gui.EnumWindows(callback, None)
 
-    return title_coords
+    if visible_rect is not None:
+        visible_rect = tuple(math.ceil(coord * scale_factor) for coord in visible_rect)
+
+    return visible_rect
