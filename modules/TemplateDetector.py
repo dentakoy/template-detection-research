@@ -1,9 +1,8 @@
 import asyncio
 import cv2
 
-
-from .averagePoint import averagePoint
-from .centroid import centroid
+from .averagePoint  import averagePoint
+from .centroid      import centroid
 
 
 class LoadGrayImageException(Exception):
@@ -15,23 +14,26 @@ class MissingTemplatesException(Exception):
 
 
 class TemplateDetector:
-    # как передать параметры конструкторам детектора и матчера?
     def __init__(   self,
                     templates,
-                    detector    = cv2.SIFT,
-                    matcher     = cv2.BFMatcher
+                    featuresDetector            = cv2.SIFT,
+                    featuresDetectorArguments   = {},
+                    featuresMatcher             = cv2.FlannBasedMatcher,
+                    featuresMatcherArguments    = {}
     ):
-        self.detector   = detector.create()
-        self.matcher    = matcher()
-        self.templates  = {}
-
+        self.featuresDetector   = featuresDetector.create(
+                                    **featuresDetectorArguments)
+        
+        self.featuresMatcher    = featuresMatcher.create(
+                                    **featuresMatcherArguments)    
+        self.templates = {}
         for key in templates:
             grayImage = cv2.imread(templates[key], cv2.COLOR_BGR2GRAY)
 
             if grayImage is None:
                 raise LoadGrayImageException('cv2.imread() returns None.')
 
-            features = self.detector.detectAndCompute(grayImage, None)
+            features = self.featuresDetector.detectAndCompute(grayImage, None)
 
             self.templates[key] = {
                 'keypoints':    features[0],
@@ -43,33 +45,39 @@ class TemplateDetector:
 
 
     def matchesToPoints(self, matches, keypoints):
-        vertices = []
+        points = []
         for match in matches:
-            vertices.append((   keypoints[match.queryIdx].pt[0],
-                                keypoints[match.queryIdx].pt[1]))
-        return vertices
+            points.append(( keypoints[match.queryIdx].pt[0],
+                            keypoints[match.queryIdx].pt[1]))
+        return points
             
 
     async def locateTemplate(   self,
                                 templateKey,
                                 image,
-                                isGrayImage = False,
-                                ratio       = 0.4,
-                                maxMatches  = 4
+                                isGrayImage             = False,
+                                lowesRatioThreshold     = 0.45,
+                                maxMatches              = 3
     ):
-        keypoints, descriptors = self.detector.detectAndCompute(
+        keypoints, descriptors = self.featuresDetector.detectAndCompute(
             image if isGrayImage else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
             None)
         
-        all = self.matcher.knnMatch(
+        all = self.featuresMatcher.knnMatch(
             descriptors, self.templates[templateKey]['descriptors'], 2)
         
-        filtered = []
-        for match in all:
-            if match[0].distance < ratio * match[1].distance:
-                filtered.append(match[0])
+        if lowesRatioThreshold:
+            filtered = []
+            for match in all:
+                if match[0].distance < lowesRatioThreshold * match[1].distance:
+                    filtered.append(match[0])
 
-        matches = sorted(filtered, key=lambda x: x.distance)[:maxMatches]
+            matches = sorted(filtered,  key=lambda x: x.distance)[:maxMatches]
+        else:
+            matches = sorted(all,       key=lambda x: x.distance)[:maxMatches]
+
+        # нужно добавить удаление дубилкатов в matches перед срезом maxMatches,
+        # иначе может происходить деление на ноль в функции centroid()
 
         if len(matches) == 0:
             return False
@@ -85,21 +93,34 @@ class TemplateDetector:
 
         return centroid(points, pointsLength)
     
+
     async def locateTemplates(  self,
                                 templatesKeys,
                                 image,
-                                isGrayImage = False,
-                                ratio       = 0.4,
-                                maxMatches  = 4,
-                                timeout     = 7000,
-                                returnWhen  = asyncio.FIRST_COMPLETED
+                                isGrayImage         = False,
+                                lowesRatioThreshold = 0.45,
+                                maxMatches          = 3,
+                                timeout             = 7000,
+                                returnWhen          = asyncio.FIRST_COMPLETED
     ):
         tasks = []
         for key in templatesKeys:
-            tasks.append(
-                self.locateTemplate(key, image, isGrayImage, ratio, maxMatches))
+            tasks.append(asyncio.create_task(self.locateTemplate(
+                key, image, isGrayImage, lowesRatioThreshold, maxMatches)))
 
         done, pending = await asyncio.wait(
-            fs=tasks, timeout=timeout, return_when=returnWhen)
+            tasks, timeout=timeout, return_when=returnWhen)
+        
+        # нужно ли вызывать .cancel для всех pending tasks?
         
         return done
+
+
+    # async def waitForTemplate(  self,
+    #                             templateKey,
+    #                             screen,
+    #                             timeout,
+    #                             lowesRatioThreshold     = 0.45,
+    #                             maxMatches              = 4
+    # ):
+    #     ...

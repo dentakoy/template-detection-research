@@ -1,12 +1,12 @@
 import asyncio
 
-from modules.ScreenShot         import ScreenShot
+from modules.Screen             import Screen
 from modules.TemplateDetector   import TemplateDetector
 
 
 async def main():
-    screenShot  = ScreenShot(2)
-    td          = TemplateDetector({
+    screen              = Screen()
+    templateDetector    = TemplateDetector({
         'icon1':    'templates/icon1.png',
         'icon2':    'templates/icon2.png',
         'icon3':    'templates/icon3.png',
@@ -14,9 +14,12 @@ async def main():
         'icon5':    'templates/icon5.png',
     })
 
-    print(await td.locateTemplate('icon1', screenShot.take()))
+    print(await templateDetector.locateTemplate('icon1', screen.shot()))
 
-    print(await td.locateTemplates(['icon1', 'icon5'], screenShot.take()))
+    ss = screen.shot()
+    r = await templateDetector.locateTemplates(['icon1', 'icon5'],
+                                                ss)
+    print(r)
 
 
 asyncio.run(main())

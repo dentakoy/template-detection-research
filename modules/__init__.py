@@ -1,6 +1,6 @@
 from .averagePoint      import averagePoint
 from .centroid          import centroid, NotEnoughtVertices
-from .ScreenShot        import ScreenShot
+from .Screen            import Screen
 
 from .TemplateDetector  import  TemplateDetector,\
                                 LoadGrayImageException,\

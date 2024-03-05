@@ -2,10 +2,10 @@ import mss
 import numpy as np
 
 
-class ScreenShot:
-    def __init__(self, monitorId):
+class Screen:
+    def __init__(self, monitorId = 0):
         self.screen     = mss.mss()
         self.monitor    = self.screen.monitors[monitorId]
 
-    def take(self):
+    def shot(self):
         return np.array(self.screen.grab(self.monitor))
