@@ -121,6 +121,6 @@ class TemplateDetector:
     #                             screen,
     #                             timeout,
     #                             lowesRatioThreshold     = 0.45,
-    #                             maxMatches              = 4
+    #                             maxMatches              = 3
     # ):
     #     ...
