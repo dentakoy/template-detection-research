@@ -6,6 +6,7 @@ import cv2
 from .uniquePoints  import uniquiePoints
 from .averagePoint  import averagePoint
 from .centroid      import centroid
+from .waitForTasks  import waitForTasks
 
 
 class LoadGrayImageException(Exception):
@@ -116,13 +117,7 @@ class TemplateDetector:
             tasks.append(asyncio.create_task(self.locateTemplate(
                 key, image, isGrayImage, lowesRatioThreshold, maxMatches)))
 
-        results, pendings = await asyncio.wait(
-            tasks, timeout=timeout, return_when=returnWhen)
-        
-        for key in pendings:
-            pendings[key].cancel()
-        
-        return results
+        return waitForTasks(tasks, timeout, returnWhen)
 
 
     async def endlessWaitForTemplate(   self,
