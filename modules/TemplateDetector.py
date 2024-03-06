@@ -23,7 +23,7 @@ class TemplateDetector:
                     featuresDetector            = cv2.SIFT,
                     featuresDetectorArguments   = {},
                     featuresMatcher             = cv2.FlannBasedMatcher,
-                    featuresMatcherArguments    = {}
+                    featuresMatcherArguments    = {},
     ):
         self.featuresDetector   = featuresDetector.create(
                                     **featuresDetectorArguments)
@@ -70,7 +70,7 @@ class TemplateDetector:
                                 image,
                                 isGrayImage             = False,
                                 lowesRatioThreshold     = 0.4,
-                                maxMatches              = 4
+                                maxMatches              = 4,
     ):
         keypoints, descriptors = self.featuresDetector.detectAndCompute(
             image if isGrayImage else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
@@ -110,14 +110,31 @@ class TemplateDetector:
                                 lowesRatioThreshold = 0.4,
                                 maxMatches          = 4,
                                 timeout             = 7,
-                                returnWhen          = asyncio.FIRST_COMPLETED
+                                returnWhen          = asyncio.FIRST_COMPLETED,
     ):
         tasks = []
         for key in templatesKeys:
-            tasks.append(asyncio.create_task(self.locateTemplate(
-                key, image, isGrayImage, lowesRatioThreshold, maxMatches)))
+            tasks.append(
+                asyncio.create_task(
+                    self.locateTemplate(
+                        key,
+                        image,
+                        isGrayImage,
+                        lowesRatioThreshold,
+                        maxMatches
+                    ),
+                    name = key
+                )
+            )
 
-        return waitForTasks(tasks, timeout, returnWhen)
+        results = await waitForTasks(tasks, timeout, returnWhen)
+        located = {}
+
+        for task in results:
+            if task.result():
+                located[task.get_name()] = task.result()
+
+        return located
 
 
     async def endlessWaitForTemplate(   self,
@@ -157,6 +174,62 @@ class TemplateDetector:
                 isGrayImage,
                 lowesRatioThreshold,
                 maxMatches,
+                loopDelay
+            ),
+            timeout
+        )
+
+
+    async def endlessWaitForTemplates(  self,
+                                        templateKeys,
+                                        screen,
+                                        isGrayImage             = False,
+                                        lowesRatioThreshold     = 0.4,
+                                        maxMatches              = 4,
+                                        timeout                 = 7,
+                                        returnWhen              = asyncio.FIRST_COMPLETED,
+                                        loopDelay               = 1,
+    ):
+        located = []
+
+        while True:
+            results = await self.locateTemplates(   templateKeys,
+                                                    screen.shot(),
+                                                    isGrayImage,
+                                                    lowesRatioThreshold,
+                                                    maxMatches,
+                                                    timeout,
+                                                    returnWhen)
+            for task in results:
+                if task.result():
+                    located.append(task.result())
+
+            if len(located):
+                return located
+
+            await asyncio.sleep(loopDelay)
+
+
+    async def waitForTemplates( self,
+                                templateKeys,
+                                screen,
+                                timeout,
+                                isGrayImage             = False,
+                                lowesRatioThreshold     = 0.4,
+                                maxMatches              = 4,
+                                returnWhen              = asyncio.FIRST_COMPLETED,
+                                loopDelay               = 1,
+                                locateTimeout           = 7,
+    ):
+        return await asyncio.wait_for(
+            self.endlessWaitForTemplates(
+                templateKeys,
+                screen,
+                isGrayImage,
+                lowesRatioThreshold,
+                maxMatches,
+                locateTimeout,
+                returnWhen,
                 loopDelay
             ),
             timeout
