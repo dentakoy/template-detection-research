@@ -1,5 +1,3 @@
-from time import sleep
-
 import asyncio
 import cv2
 
@@ -190,8 +188,6 @@ class TemplateDetector:
                                         returnWhen              = asyncio.FIRST_COMPLETED,
                                         loopDelay               = 1,
     ):
-        located = []
-
         while True:
             results = await self.locateTemplates(   templateKeys,
                                                     screen.shot(),
@@ -200,12 +196,8 @@ class TemplateDetector:
                                                     maxMatches,
                                                     timeout,
                                                     returnWhen)
-            for task in results:
-                if task.result():
-                    located.append(task.result())
-
-            if len(located):
-                return located
+            if len(results):
+                return results
 
             await asyncio.sleep(loopDelay)
 
