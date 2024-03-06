@@ -16,8 +16,10 @@ async def main():
 
     #print(await templateDetector.locateTemplate('icon1', screen.shot()))
 
-    print(await templateDetector.locateTemplates(['icon1', 'icon5'],
-                                                 screen.shot()))
+    #print(await templateDetector.locateTemplates(['icon1', 'icon5'],
+    #                                             screen.shot()))
+
+    print(await templateDetector.waitForTemplate('icon1', screen, 10))
 
 
 asyncio.run(main())

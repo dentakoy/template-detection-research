@@ -1,11 +1,11 @@
 def uniquiePoints(points):
-    uniqueDictionary = {}
+    dictionaryOfUniquies = {}
 
-    for point in points:
-        uniqueDictionary[f'{point[0]}x{point[1]}'] = point
+    for key, (x, y) in enumerate(points):
+        dictionaryOfUniquies[f'{x}x{y}'] = key
 
-    points = []
-    for key in uniqueDictionary:
-        points.append(uniqueDictionary[key])
+    uniquiePoints = []
+    for key in dictionaryOfUniquies:
+        uniquiePoints.append(points[dictionaryOfUniquies[key]])
 
-    return points
+    return uniquiePoints
