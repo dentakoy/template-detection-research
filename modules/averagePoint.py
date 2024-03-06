@@ -8,5 +8,5 @@ def averagePoint(points, pointsLength = None):
 
     pointsLength = len(points) if pointsLength is None else pointsLength
     
-    return (round(sumX / len(pointsLength)),
-            round(sumY / len(pointsLength)))
+    return (round(sumX / pointsLength),
+            round(sumY / pointsLength))

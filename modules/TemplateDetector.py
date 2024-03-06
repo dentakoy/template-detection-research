@@ -1,6 +1,7 @@
 import asyncio
 import cv2
 
+from .uniquePoints  import uniquiePoints
 from .averagePoint  import averagePoint
 from .centroid      import centroid
 
@@ -50,40 +51,45 @@ class TemplateDetector:
             points.append(( keypoints[match.queryIdx].pt[0],
                             keypoints[match.queryIdx].pt[1]))
         return points
-            
+    
+
+    def lowesFilter(self, matches, ratioThreshold = 0.4):
+        filtered = []
+        for match in matches:
+            if match[0].distance < ratioThreshold * match[1].distance:
+                filtered.append(match[0])
+
+        return filtered
+        
 
     async def locateTemplate(   self,
                                 templateKey,
                                 image,
                                 isGrayImage             = False,
-                                lowesRatioThreshold     = 0.45,
+                                lowesRatioThreshold     = 0.4,
                                 maxMatches              = 3
     ):
         keypoints, descriptors = self.featuresDetector.detectAndCompute(
             image if isGrayImage else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
             None)
         
-        all = self.featuresMatcher.knnMatch(
-            descriptors, self.templates[templateKey]['descriptors'], 2)
-        
-        if lowesRatioThreshold:
-            filtered = []
-            for match in all:
-                if match[0].distance < lowesRatioThreshold * match[1].distance:
-                    filtered.append(match[0])
+        if type(lowesRatioThreshold) == float and lowesRatioThreshold != 0:
+            all = self.featuresMatcher.knnMatch(
+                descriptors, self.templates[templateKey]['descriptors'], 2)
 
-            matches = sorted(filtered,  key=lambda x: x.distance)[:maxMatches]
+            matches = sorted(   self.lowesFilter(all, lowesRatioThreshold),
+                                key=lambda x: x.distance)[:maxMatches]
         else:
-            matches = sorted(all,       key=lambda x: x.distance)[:maxMatches]
-
-        # нужно добавить удаление дубилкатов в matches перед срезом maxMatches,
-        # иначе может происходить деление на ноль в функции centroid()
+            all = self.featuresMatcher.match(
+                descriptors, self.templates[templateKey]['descriptors'])
+            
+            matches = sorted(all, key=lambda x: x.distance)[:maxMatches]
 
         if len(matches) == 0:
             return False
         
-        points          = self.matchesToPoints(matches, keypoints)
-        pointsLength    = len(points)
+        points       = uniquiePoints(self.matchesToPoints(matches, keypoints))
+        pointsLength = len(points)
 
         if pointsLength == 1:
             return points[0]
@@ -98,7 +104,7 @@ class TemplateDetector:
                                 templatesKeys,
                                 image,
                                 isGrayImage         = False,
-                                lowesRatioThreshold = 0.45,
+                                lowesRatioThreshold = 0.4,
                                 maxMatches          = 3,
                                 timeout             = 7000,
                                 returnWhen          = asyncio.FIRST_COMPLETED
@@ -108,19 +114,20 @@ class TemplateDetector:
             tasks.append(asyncio.create_task(self.locateTemplate(
                 key, image, isGrayImage, lowesRatioThreshold, maxMatches)))
 
-        done, pending = await asyncio.wait(
+        dones, pendings = await asyncio.wait(
             tasks, timeout=timeout, return_when=returnWhen)
         
-        # нужно ли вызывать .cancel для всех pending tasks?
+        for key in pendings:
+            pendings[key].cancel()
         
-        return done
+        return dones
 
 
     # async def waitForTemplate(  self,
     #                             templateKey,
     #                             screen,
     #                             timeout,
-    #                             lowesRatioThreshold     = 0.45,
+    #                             lowesRatioThreshold     = 0.4,
     #                             maxMatches              = 3
     # ):
     #     ...
