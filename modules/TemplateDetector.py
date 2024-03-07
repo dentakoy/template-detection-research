@@ -125,14 +125,7 @@ class TemplateDetector:
                 )
             )
 
-        results = await waitForTasks(tasks, timeout, returnWhen)
-        located = {}
-
-        for task in results:
-            if task.result():
-                located[task.get_name()] = task.result()
-
-        return located
+        return await waitForTasks(tasks, timeout, returnWhen)
 
 
     async def endlessWaitForTemplate(   self,
