@@ -6,7 +6,7 @@ from modules.waitForTasks       import waitForTasks
 
 
 async def main():
-    screen              = Screen(2)
+    screen              = Screen(1)
     templateDetector    = TemplateDetector({
         'icon1':    'templates/icon1.png',
         'icon2':    'templates/icon2.png',
@@ -15,16 +15,12 @@ async def main():
         'icon5':    'templates/icon5.png',
     })
 
-    #print(await templateDetector.locateTemplate('icon1', screen.shot()))
-
-    # print(await templateDetector.locateTemplates(['icon1', 'icon5'],
-    #                                              screen.shot()))
-
-    #print(await templateDetector.waitForTemplate('icon1', screen, 10))
-
-    print(await templateDetector.waitForTemplates(  ['icon1', 'icon5'],
-                                                    screen,
-                                                    10))
+    finded = await templateDetector.waitForTemplates(   [ 'icon1', 'icon2' ],
+                                                        screen,
+                                                        10)
+    for key in finded:
+        print(key, finded[key])
+        screen.aim(finded[key])
 
     # screenShot = screen.shot()
     # print(await waitForTasks([

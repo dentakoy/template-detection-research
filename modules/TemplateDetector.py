@@ -1,7 +1,7 @@
 import asyncio
 import cv2
 
-from .uniquePoints  import uniquiePoints
+from .uniquePoints  import uniquePoints
 from .averagePoint  import averagePoint
 from .centroid      import centroid
 from .waitForTasks  import waitForTasks
@@ -89,7 +89,7 @@ class TemplateDetector:
         if len(matches) == 0:
             return False
         
-        points       = uniquiePoints(self.matchesToPoints(matches, keypoints))
+        points       = uniquePoints(self.matchesToPoints(matches, keypoints))
         pointsLength = len(points)
 
         if pointsLength == 1:
@@ -134,7 +134,7 @@ class TemplateDetector:
                                         isGrayImage             = False,
                                         lowesRatioThreshold     = 0.4,
                                         maxMatches              = 4,
-                                        loopDelay               = 1,
+                                        loopDelay               = 0.1,
     ):
         located = False
 
@@ -156,7 +156,7 @@ class TemplateDetector:
                                 isGrayImage             = False,
                                 lowesRatioThreshold     = 0.4,
                                 maxMatches              = 4,
-                                loopDelay               = 1,
+                                loopDelay               = 0.1,
     ):
         return await asyncio.wait_for(
             self.endlessWaitForTemplate(
@@ -179,7 +179,7 @@ class TemplateDetector:
                                         maxMatches              = 4,
                                         timeout                 = 7,
                                         returnWhen              = asyncio.FIRST_COMPLETED,
-                                        loopDelay               = 1,
+                                        loopDelay               = 0.1,
     ):
         while True:
             results = await self.locateTemplates(   templateKeys,
@@ -203,7 +203,7 @@ class TemplateDetector:
                                 lowesRatioThreshold     = 0.4,
                                 maxMatches              = 4,
                                 returnWhen              = asyncio.FIRST_COMPLETED,
-                                loopDelay               = 1,
+                                loopDelay               = 0.1,
                                 locateTimeout           = 7,
     ):
         return await asyncio.wait_for(
