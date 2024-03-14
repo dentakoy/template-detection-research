@@ -33,6 +33,8 @@ class Screen:
         else:
             self.aimParams['rootAttributes'] = ('-alpha', aimRootAlpha)
 
+        self.canvas_item_tags = []
+
 
     def shot(self):
         return np.array(self.screen.grab(self.monitor))
@@ -57,6 +59,19 @@ class Screen:
         return newColor, direction
     
 
+    def updateColor(self, canvas, item_tags, r, g, b, directionR, directionG, directionB):
+        fill_color = '#{:02x}{:02x}{:02x}'.format(r, g, b)
+        for tag in item_tags:
+            canvas.itemconfig(tag, fill=fill_color)
+
+        r, directionR = self.calculateNewColor(r, directionR)
+        g, directionG = self.calculateNewColor(g, directionG)
+        b, directionB = self.calculateNewColor(b, directionB)
+
+        canvas.after(self.aimParams['animationDelay'], self.updateColor, canvas, item_tags, r, g, b, directionR,
+                     directionG, directionB)
+
+
     def aim(self, point):
         root = Tk()
         root.geometry(f"+{self.monitor['left']}+{self.monitor['top']}")
@@ -69,16 +84,18 @@ class Screen:
                         height  = self.monitor['height'])
         canvas.pack()
 
-        r, g, b     = self.aimParams['color']
-        fill_color  = '#{:02x}{:02x}{:02x}'.format(r, g, b)
+        r, g, b = self.aimParams['color']
+        fill_color = '#{:02x}{:02x}{:02x}'.format(r, g, b)
 
-        canvas.create_line( point[0] - self.aimParams['size'] // 2, point[1],
-                            point[0] + self.aimParams['size'] // 2, point[1],
-                            fill=fill_color, width=self.aimParams['width'])
-        
-        canvas.create_line( point[0], point[1] - self.aimParams['size'] // 2,
-                            point[0], point[1] + self.aimParams['size'] // 2,
-                            fill=fill_color, width=self.aimParams['width'])
+        line1_tag = canvas.create_line(point[0] - self.aimParams['size'] // 2, point[1],
+                                       point[0] + self.aimParams['size'] // 2, point[1],
+                                       fill=fill_color, width=self.aimParams['width'])
+        line2_tag = canvas.create_line(point[0], point[1] - self.aimParams['size'] // 2,
+                                       point[0], point[1] + self.aimParams['size'] // 2,
+                                       fill=fill_color, width=self.aimParams['width'])
+
+        self.canvas_item_tags = [line1_tag, line2_tag]
+
         root.lift()
         root.update()
 
@@ -86,16 +103,8 @@ class Screen:
         directionG = 1
         directionB = 1
 
-        def updateСolor():
-            nonlocal r, g, b, directionR, directionG, directionB, fill_color
-            r, directionR = self.calculateNewColor(r, directionR)
-            g, directionG = self.calculateNewColor(g, directionG)
-            b, directionB = self.calculateNewColor(b, directionB)
-            fill_color = '#{:02x}{:02x}{:02x}'.format(r, g, b)
-            canvas.itemconfig(1, fill=fill_color)
-            canvas.itemconfig(2, fill=fill_color)
-            root.after(self.aimParams['animationDelay'], updateСolor)
+        canvas.after(self.aimParams['delay'], root.destroy)
+        canvas.after(self.aimParams['animationDelay'], self.updateColor, canvas, self.canvas_item_tags, r, g, b,
+                     directionR, directionG, directionB)
 
-        root.after(self.aimParams['delay'],             root.destroy)
-        root.after(self.aimParams['animationDelay'],    updateСolor)
         root.mainloop()
