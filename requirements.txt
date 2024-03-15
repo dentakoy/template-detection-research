@@ -1,2 +1,7 @@
-mss==9.0.1
-opencv-python==4.9.0.80
+mss~=9.0.1
+numpy~=1.26.4
+asyncio~=3.4.3
+opencv-python~=4.9.0.80
+PyGetWindow~=0.0.9
+screeninfo~=0.8.1
+pywin32~=306
