@@ -15,10 +15,14 @@ def find_text_in_image(
         sharpness_factor: float = 2.0,
         scale_factor: int = 3,
         lang='eng'):
+<<<<<<< HEAD
 
     # надо повернуть байты так как mss отдаёт BGRA
     image = Image.fromarray(screen_shot[:, :, (2, 1, 0)], 'RGB')
     # градации серого, можно сначала увеличивать, применять контрастность и прочее и потом градачии, но дольше выходит
+=======
+    image = Image.fromarray(screen_shot[:, :, (2, 1, 0)], 'RGB')
+>>>>>>> 84fd5949f5c3d312fcaf1f406ef78e36ba3272e7
     image = image.convert('L')
 
     width, height = image.size
@@ -55,7 +59,11 @@ def find_text_in_image(
             bottom_right_y = row['top'] + row['height']
             found_texts.append({
                 'text': row['text'],
+<<<<<<< HEAD
                 'coords': ((math.ceil(row['left'] / scale_factor), math.ceil(row['top'] / scale_factor)),
+=======
+                'coordinates': ((math.ceil(row['left'] / scale_factor), math.ceil(row['top'] / scale_factor)),
+>>>>>>> 84fd5949f5c3d312fcaf1f406ef78e36ba3272e7
                                 (math.ceil(bottom_right_x / scale_factor), math.ceil(bottom_right_y / scale_factor))),
                 'confidence': row['conf']
             })
@@ -72,7 +80,11 @@ def find_text_in_image(
                 bottom_right_y = y + h
                 found_texts.append({
                     'text': line_text,
+<<<<<<< HEAD
                     'coords': ((math.ceil(x / scale_factor), math.ceil(y / scale_factor)),
+=======
+                    'coord': ((math.ceil(x / scale_factor), math.ceil(y / scale_factor)),
+>>>>>>> 84fd5949f5c3d312fcaf1f406ef78e36ba3272e7
                               (math.ceil(bottom_right_x / scale_factor), math.ceil(bottom_right_y / scale_factor))),
                     'confidence': line['conf'].mean()
                 })
