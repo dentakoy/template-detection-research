@@ -15,7 +15,6 @@ def find_text_in_image(
         sharpness_factor: float = 2.0,
         scale_factor: int = 3,
         lang='eng'):
-
     # надо повернуть байты так как mss отдаёт BGRA
     image = Image.fromarray(screen_shot[:, :, (2, 1, 0)], 'RGB')
     # градации серого, можно сначала увеличивать, применять контрастность и прочее и потом градачии, но дольше выходит
@@ -37,8 +36,11 @@ def find_text_in_image(
     # Увеличиваем размер изображения
     image = image.resize((width * scale_factor, height * scale_factor), Image.BILINEAR)
 
-    
-    custom_config = r'--oem 3 --psm 11' # 11 или 12 показали лучшие результаты
+    custom_config = r'--oem 3 --psm 11'  # 11 или 12 показали лучшие результаты
+    # If you don't have tesseract executable in your PATH, include the following:
+    pytesseract.pytesseract.tesseract_cmd = r'H:\Tesseract-OCR\tesseract'
+    # Example tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
+
     data_text = pytesseract.image_to_data(
         image, lang=lang,
         config=custom_config,
@@ -48,7 +50,7 @@ def find_text_in_image(
 
     found_texts = []
 
-    if len(finding_text.split(' ')) == 21:
+    if len(finding_text.split(' ')) == 1:
         matches = filtered_data[filtered_data.text.str.contains(finding_text, case=False, na=False)]
 
         for index, row in matches.iterrows():
@@ -57,7 +59,7 @@ def find_text_in_image(
             found_texts.append({
                 'text': row['text'],
                 'coords': ((math.ceil(row['left'] / scale_factor), math.ceil(row['top'] / scale_factor)),
-                          (math.ceil(bottom_right_x / scale_factor), math.ceil(bottom_right_y / scale_factor))),
+                           (math.ceil(bottom_right_x / scale_factor), math.ceil(bottom_right_y / scale_factor))),
                 'confidence': row['conf']
             })
 
@@ -75,7 +77,7 @@ def find_text_in_image(
                     'text': line_text,
                     'coords': ((math.ceil(x / scale_factor), math.ceil(y / scale_factor)),
 
-                              (math.ceil(bottom_right_x / scale_factor), math.ceil(bottom_right_y / scale_factor))),
+                               (math.ceil(bottom_right_x / scale_factor), math.ceil(bottom_right_y / scale_factor))),
                     'confidence': line['conf'].mean()
                 })
 
@@ -84,18 +86,18 @@ def find_text_in_image(
 
 screen = Screen(1)
 
-search_text = "next"
+search_text = "аккаунт"
 threshold = 10
 contrast = 1.15
-langue = 'eng'
+langue = 'rus'
 
 found_texts_info = find_text_in_image(
-                            screen.shot(),
-                            search_text,
-                            threshold,
-                            contrast_factor=contrast,
-                            scale_factor=5, 
-                            lang=langue)
+    screen.shot(),
+    search_text,
+    threshold,
+    contrast_factor=contrast,
+    scale_factor=5,
+    lang=langue)
 
 for text_info in found_texts_info:
     print(text_info)
