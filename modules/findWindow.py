@@ -1,4 +1,5 @@
 from platform import system
+import re
 
 
 class FindWindow:
@@ -9,7 +10,7 @@ class FindWindow:
             if keyResult:
                 # print(keyResult)
                 for k in keyResult:
-                    self.titleTemplate.setdefault(key, []).append({
+                    self.titleTemplate.setdefault(key.pattern, []).append({
                         'title': k[0],
                         'coords': k[1]
                     })
@@ -17,7 +18,7 @@ class FindWindow:
     def getResult(self):
         return self.titleTemplate
 
-    def getLinuxTitleCoords(self, title: str = 'chrome'):
+    def getLinuxTitleCoords(self, title_pattern: re.Pattern):
         from collections import namedtuple
         import Xlib.display
         MyGeom = namedtuple('MyGeom', 'x y height width')
@@ -56,7 +57,7 @@ class FindWindow:
             y2 = y1 + geom.height
             return ((x1, y1), (x2, y2))
 
-        def get_window_title_coord(window_name: str):
+        def get_window_title_coord(window_name_pattern: re.Pattern):
             window_title_and_coords = []
 
             window_list = root.get_full_property(NET_CLIENT_LIST, 0).value
@@ -64,20 +65,18 @@ class FindWindow:
             for window in window_list:
                 window_obj = disp.create_resource_object('window', window)
 
-                window_title = window_obj.get_full_property(disp.intern_atom('_NET_WM_NAME'), UTF8_STRING).value.decode('utf-8')
+                window_title = window_obj.get_full_property(disp.intern_atom('_NET_WM_NAME'), UTF8_STRING).value.decode(
+                    'utf-8')
                 # print(window_title)
-                if window_title and window_name.casefold() in window_title.casefold():
+                if window_title and window_name_pattern.search(window_title):
                     # print(window_title, get_window_bbox(window_obj))
                     window_title_and_coords.append([window_title, get_window_bbox(window_obj)])
 
             return window_title_and_coords
 
-        return get_window_title_coord(title)
+        return get_window_title_coord(title_pattern)
 
-
-
-
-    def getWindowsTitleCoords(self, title: str = 'chrome'):
+    def getWindowsTitleCoords(self, title_pattern: re.Pattern):
         from tkinter import Tk
         from screeninfo import get_monitors
         import win32gui
@@ -126,12 +125,12 @@ class FindWindow:
 
         get_scale_factor()
 
-        def get_window_title_coord(window_name: str, scale_factor: float = 1.0, isVisibleRect: bool = True):
+        def get_window_title_coord(window_name_pattern: re.Pattern, scale_factor: float = 1.0, isVisibleRect: bool = True):
 
             window_title_and_coords = []
 
             def callback(handle, data):
-                if window_name.casefold() in win32gui.GetWindowText(handle).casefold():
+                if window_name_pattern.search(win32gui.GetWindowText(handle)):
                     window_title = win32gui.GetWindowText(handle)
                     # print(win32gui.GetWindowText(handle))
                     client_rect = win32gui.GetClientRect(handle)
@@ -155,10 +154,10 @@ class FindWindow:
 
             return window_title_and_coords
 
-        return get_window_title_coord(title)
+        return get_window_title_coord(title_pattern)
 
-    def find(self, title):
+    def find(self, title_pattern: re.Pattern):
         if system() == 'Windows':
-            return self.getWindowsTitleCoords(title)
+            return self.getWindowsTitleCoords(title_pattern)
         elif system() == 'Linux':
-            return self.getLinuxTitleCoords(title)
+            return self.getLinuxTitleCoords(title_pattern)
