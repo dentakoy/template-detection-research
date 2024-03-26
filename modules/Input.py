@@ -112,29 +112,9 @@ def press_combo_keys(keys: str):
         isWindows = True
 
     for key in keys_combo:
-        if key == 'ctrl':
-            keys_array.append(Key.ctrl)
-        elif key == 'alt':
-            keys_array.append(Key.alt)
-        elif key == 'shift':
-            keys_array.append(Key.shift)
-        elif key == 'backspace':
-            keys_array.append(Key.backspace)
-        elif key == 'enter':
-            keys_array.append(Key.enter)
-        elif key == 'esc':
-            keys_array.append(Key.esc)
-        elif key == 'home':
-            keys_array.append(Key.home)
-        elif key == 'end':
-            keys_array.append(Key.end)
-        elif key == 'delete':
-            keys_array.append(Key.delete)
-        elif key == 'space':
-            keys_array.append(Key.space)
-        elif len(key) == 1:  # Если это одиночная буква
+        if len(key) == 1:  # Если это одиночная буква
             key_code = KeyCode.from_char(key.lower())
-            keys_array.append(key_code)
+            keys_array.append(key_code)  # Добавляем ее как объект Key
         else:
             try:
                 keys_array.append(eval(f'Key.{key}'))  # Попытка преобразовать строку в объект Key
