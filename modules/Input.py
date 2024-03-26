@@ -26,8 +26,15 @@ def mouse_click(x: int, y: int, isRight: bool = False, isDoubleClick: bool = Fal
     time.sleep(delay)
 
 
-def input_text(text: str, delay_min: float = 0.1, delay_max: float = 0.7):
+def mouse_scroll_up(count: int = 2):
+    __mouse.scroll(0, count)
 
+
+def mouse_scroll_down(count: int = 2):
+    __mouse.scroll(0, -count)
+
+
+def input_text(text: str, delay_min: float = 0.1, delay_max: float = 0.7):
     for char in text:
         __keyboard.press(char)
         delay = random.uniform(delay_min, delay_max)  # Генерировать случайную задержку между нажатием кнопки
@@ -120,7 +127,6 @@ def press_combo_keys(keys: str):
                 keys_array.append(eval(f'Key.{key}'))  # Попытка преобразовать строку в объект Key
             except AttributeError:
                 print(f"Неизвестная комбинация клавиш: {key}")
-
 
     if len(keys_array) == 1 and not isWindows:
         press_key(keys_array[0])
